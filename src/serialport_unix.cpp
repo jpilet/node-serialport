@@ -35,12 +35,14 @@ Boolean lockInitialised = FALSE;
 struct UnixPlatformOptions : OpenBatonPlatformOptions {
   uint8_t vmin;
   uint8_t vtime;
+  uint8_t icanon;
 };
 
 OpenBatonPlatformOptions* ParsePlatformOptions(const v8::Local<v8::Object>& options) {
   Nan::HandleScope scope;
 
   UnixPlatformOptions* result = new UnixPlatformOptions();
+  result->icanon = Nan::Get(options, Nan::New<v8::String>("icanon").ToLocalChecked()).ToLocalChecked()->ToInt32()->Int32Value();
   result->vmin = Nan::Get(options, Nan::New<v8::String>("vmin").ToLocalChecked()).ToLocalChecked()->ToInt32()->Int32Value();
   result->vtime = Nan::Get(options, Nan::New<v8::String>("vtime").ToLocalChecked()).ToLocalChecked()->ToInt32()->Int32Value();
 
@@ -320,7 +322,7 @@ int setup(int fd, OpenBaton *data) {
 
   // ICANON makes partial lines not readable. It should be optional.
   // It works with ICRNL.
-  options.c_lflag = 0;  // ICANON;
+  options.c_lflag = (platformOptions->icanon ? ICANON : 0);  // ICANON;
 
   options.c_cc[VMIN]= platformOptions->vmin;
   options.c_cc[VTIME]= platformOptions->vtime;
